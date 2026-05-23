@@ -48,21 +48,21 @@ Fixed-interval scheduler, random selection without immediate repeat, pause state
 ## M4 — Notification Popup (Critical)
 Frameless transparent always-on-top window, no focus stealing, click-through with hover-to-interact dismiss, fade animation, 7-anchor positioning, replacement on collision.
 
-- [ ] Implement `src/main/notification-window.ts` with all `BrowserWindow` flags per PRD §6.3.
-- [ ] Call `setAlwaysOnTop(true, "screen-saver")`, `setVisibleOnAllWorkspaces(true)`, `setIgnoreMouseEvents(true, { forward: true })`.
-- [ ] Use `showInactive()` exclusively; never call `.focus()` or focused `.show()`.
-- [ ] Compute target display via `screen.getDisplayNearestPoint(cursor)`.
-- [ ] Position math for all 7 anchors with 24px screen-edge margin.
-- [ ] Sizing: measure text in the renderer, post measurement back via IPC, resize window to `min(textWidth + 64, 520)` × content height.
-- [ ] Build `src/renderer/notification/Popup.tsx` with text-only content, IBM Plex Sans Arabic, RTL.
-- [ ] Apply popup styling: `--popup-bg`, `backdrop-filter: blur(18px)`, 16px radius, soft shadow.
-- [ ] Fade in 400ms ease-out + 4px translate-y; hold `visibleDurationSeconds`; fade out 400ms.
-- [ ] Hover detection in the renderer toggles `setIgnoreMouseEvents(false)` on enter and `true` on leave.
-- [ ] Render `×` icon in top-corner (left in RTL) only while interactive; click dismisses immediately.
-- [ ] Click anywhere on the popup body while interactive also dismisses.
-- [ ] Replacement behavior: if a new dhikr is requested while one is on screen, cancel the current fade, swap text, restart fade-in.
-- [ ] Verify the popup sits above maximized and fullscreen-borderless windows.
-- [ ] Decide pre-warmed vs. per-fire window after benchmarking fade-start jank.
+- [x] Implement `src/main/notification-window.ts` with all `BrowserWindow` flags per PRD §6.3.
+- [x] Call `setAlwaysOnTop(true, "screen-saver")`, `setVisibleOnAllWorkspaces(true)`, `setIgnoreMouseEvents(true, { forward: true })`.
+- [x] Use `showInactive()` exclusively; never call `.focus()` or focused `.show()`.
+- [x] Compute target display via `screen.getDisplayNearestPoint(cursor)`.
+- [x] Position math for all 7 anchors with 24px screen-edge margin.
+- [x] Sizing: measure text in the renderer, post measurement back via IPC, resize window to `min(textWidth + 64, 520)` × content height.
+- [x] Build `src/renderer/notification/Popup.tsx` with text-only content, IBM Plex Sans Arabic, RTL.
+- [x] Apply popup styling: `--popup-bg`, `backdrop-filter: blur(18px)`, 16px radius, soft shadow.
+- [x] Fade in 400ms ease-out + 4px translate-y; hold `visibleDurationSeconds`; fade out 400ms.
+- [x] Hover detection in the renderer toggles `setIgnoreMouseEvents(false)` on enter and `true` on leave.
+- [x] Render `×` icon in top-corner (left in RTL) only while interactive; click dismisses immediately.
+- [x] Click anywhere on the popup body while interactive also dismisses.
+- [x] Replacement behavior: if a new dhikr is requested while one is on screen, cancel the current fade, swap text, restart fade-in.
+- [~] Verify the popup sits above maximized and fullscreen-borderless windows. *(Flags set per PRD; manual smoke-test on Windows pending — covered by AC3f in M9.)*
+- [x] Decide pre-warmed vs. per-fire window after benchmarking fade-start jank. *(Pre-warmed single window: created on first fire, hidden between presentations. Eliminates load-cost flicker; replacement handled by generation token + key restart.)*
 
 ## M5 — Settings UI
 Settings window with sidebar tabs, status header, live theme switching, sliders, supplications manager with import/export.

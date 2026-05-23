@@ -8,6 +8,6 @@ if (!container) throw new Error("#root not found");
 
 createRoot(container).render(
   <StrictMode>
-    <Popup text="سُبْحَانَ اللَّهِ وَبِحَمْدِهِ" />
+    <Popup />
   </StrictMode>,
 );

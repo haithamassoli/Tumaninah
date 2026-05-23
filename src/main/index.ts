@@ -2,6 +2,7 @@ import { app, BrowserWindow, powerMonitor } from "electron";
 import { join } from "node:path";
 import { IpcChannels } from "../shared/ipc";
 import { registerIpc } from "./ipc";
+import { NotificationController } from "./notification-window";
 import { Scheduler } from "./scheduler";
 import { Store } from "./store";
 import { TrayController } from "./tray";
@@ -13,6 +14,7 @@ let settingsWindow: BrowserWindow | null = null;
 let store: Store | null = null;
 let scheduler: Scheduler | null = null;
 let tray: TrayController | null = null;
+let notifications: NotificationController | null = null;
 let disposeIpc: (() => void) | null = null;
 let disposeStatusBroadcast: (() => void) | null = null;
 
@@ -77,10 +79,9 @@ if (!gotLock) {
     store = await Store.load();
     const dataFilePath = join(app.getPath("userData"), "data.json");
 
-    // M4 owns the notification window. Until it lands, surface fires via log
-    // so M3 timing/selection is observable end-to-end.
-    scheduler = new Scheduler(store, (dhikr, reason) => {
-      console.log(`[scheduler:${reason}] ${dhikr.text}`);
+    notifications = new NotificationController({ store });
+    scheduler = new Scheduler(store, (dhikr) => {
+      notifications?.present(dhikr);
     });
 
     disposeIpc = registerIpc({ store, scheduler, dataFilePath });
@@ -116,6 +117,8 @@ if (!gotLock) {
     scheduler = null;
     tray?.stop();
     tray = null;
+    notifications?.dispose();
+    notifications = null;
     disposeIpc?.();
     disposeIpc = null;
     try {

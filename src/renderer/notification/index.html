@@ -5,8 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self' data:;" />
     <title>Tumaninah</title>
+    <style>
+      html, body, #root { background: transparent !important; height: 100%; }
+      body { margin: 0; overflow: hidden; }
+      #root {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
   </head>
-  <body class="bg-transparent">
+  <body>
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>

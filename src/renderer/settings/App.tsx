@@ -4,7 +4,10 @@ export function App(): JSX.Element {
   const [pong, setPong] = useState<string | null>(null);
 
   useEffect(() => {
-    void window.tumaninah?.ping().then(setPong).catch(() => setPong(null));
+    void window.tumaninah?.settings
+      .get()
+      .then(() => setPong("pong"))
+      .catch(() => setPong(null));
   }, []);
 
   return (

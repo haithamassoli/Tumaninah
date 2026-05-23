@@ -22,6 +22,9 @@ export const IpcChannels = {
   NotificationDismiss: "notification:dismiss",
   NotificationMeasure: "notification:measure",
   NotificationDhikr: "notification:dhikr",
+  NotificationShow: "notification:show",
+  NotificationHover: "notification:hover",
+  NotificationFadeDone: "notification:fadeDone",
 
   DataExportRaw: "data:export",
   DataResetDefaults: "data:reset",
@@ -48,6 +51,23 @@ export interface AdhkarImportResult {
 
 export interface AdhkarExportResult {
   adhkar: string[];
+}
+
+export interface NotificationShowPayload {
+  /** Generation token so the renderer can ignore stale frames during replacement. */
+  generation: number;
+  text: string;
+  fontSizePx: number;
+  visibleDurationSeconds: number;
+  theme: "system" | "light" | "dark";
+}
+
+export interface NotificationHoverPayload {
+  hovering: boolean;
+}
+
+export interface NotificationFadeDonePayload {
+  generation: number;
 }
 
 export interface PausePayload {

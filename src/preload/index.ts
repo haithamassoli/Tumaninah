@@ -5,6 +5,9 @@ import type {
   AdhkarImportPayload,
   AdhkarImportResult,
   AdhkarUpdatePayload,
+  NotificationFadeDonePayload,
+  NotificationHoverPayload,
+  NotificationShowPayload,
   PausePayload,
 } from "../shared/ipc";
 import type { AppData, Dhikr, SchedulerStatus, Settings } from "../shared/types";
@@ -53,8 +56,14 @@ const api = {
     dismiss: (): Promise<void> => invoke(IpcChannels.NotificationDismiss),
     measure: (size: { width: number; height: number }): Promise<void> =>
       invoke(IpcChannels.NotificationMeasure, size),
-    onDhikr: (handler: (text: string) => void): (() => void) =>
-      subscribe(IpcChannels.NotificationDhikr, handler),
+    hover: (payload: NotificationHoverPayload): void => {
+      ipcRenderer.send(IpcChannels.NotificationHover, payload);
+    },
+    fadeDone: (payload: NotificationFadeDonePayload): void => {
+      ipcRenderer.send(IpcChannels.NotificationFadeDone, payload);
+    },
+    onShow: (handler: (payload: NotificationShowPayload) => void): (() => void) =>
+      subscribe(IpcChannels.NotificationShow, handler),
   },
 
   data: {

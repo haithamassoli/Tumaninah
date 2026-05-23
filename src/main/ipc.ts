@@ -135,8 +135,7 @@ export function registerIpc(deps: IpcDeps): () => void {
         scheduler?.fireNow() ?? { nextFireAt: null, pausedUntil: store.getSettings().pausedUntil },
     ],
 
-    [IpcChannels.NotificationDismiss, () => undefined],
-    [IpcChannels.NotificationMeasure, () => undefined],
+    // NotificationDismiss + NotificationMeasure are owned by NotificationController.
 
     [IpcChannels.DataExportRaw, (): AppData => store.getData()],
     [
