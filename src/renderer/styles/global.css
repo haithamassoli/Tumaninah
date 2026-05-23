@@ -1,0 +1,37 @@
+/* Enable once IBM Plex Sans Arabic .woff2 files are dropped into
+   src/renderer/assets/fonts/. Until then the font-family stack
+   falls back to Segoe UI, which renders Arabic well on Windows.
+   See src/renderer/assets/fonts/README.md for filenames. */
+/* @import "./fonts.css"; */
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+    font-feature-settings: "ss01", "kern";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--bg);
+    color: var(--text);
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+}
