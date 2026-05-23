@@ -143,6 +143,9 @@ export function registerIpc(deps: IpcDeps): () => void {
       IpcChannels.DataResetDefaults,
       (): AppData => {
         const data = store.resetToDefaults();
+        // Store.onChange already re-applies autostart + fullscreen sync.
+        // We additionally reschedule since interval may have changed.
+        scheduler?.rescheduleFromNow();
         broadcast(IpcChannels.SettingsChanged, data.settings);
         broadcast(IpcChannels.AdhkarChanged, data.adhkar);
         return data;

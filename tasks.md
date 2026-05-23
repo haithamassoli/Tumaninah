@@ -83,15 +83,15 @@ Settings window with sidebar tabs, status header, live theme switching, sliders,
 ## M6 — System Integration
 Auto-start with Windows, optional fullscreen detection, power events, reset-to-defaults flow.
 
-- [ ] Implement `src/main/autostart.ts` using `app.setLoginItemSettings({ openAtLogin, openAsHidden: true, args: ["--hidden"] })`.
-- [ ] Bind autostart to `settings.autoStart`; default `true` on first run.
-- [ ] When launched with `--hidden`, do not open Settings; tray only.
-- [ ] Implement `src/main/fullscreen.ts`: poll every 5s **only when** `respectFullscreen === true`.
-- [ ] Pick the lighter dependency between `node-active-window` and `win-fullscreen`; document choice.
-- [ ] On fire, if a fullscreen foreground process is detected and `respectFullscreen` is on, skip that fire without requeueing.
-- [ ] Hook `powerMonitor.resume` to scheduler reschedule (already wired in M3; verify end-to-end).
-- [ ] Hook `powerMonitor.suspend` as a no-op for now (documented).
-- [ ] `Reset to defaults` overwrites `data.json` with defaults and reloads main state + open Settings tab.
+- [x] Implement `src/main/autostart.ts` using `app.setLoginItemSettings({ openAtLogin, openAsHidden: true, args: ["--hidden"] })`.
+- [x] Bind autostart to `settings.autoStart`; default `true` on first run. *(Re-applied via Store `onChange` hook on every settings mutation; idempotent.)*
+- [x] When launched with `--hidden`, do not open Settings; tray only. *(Already wired in M1; verified.)*
+- [x] Implement `src/main/fullscreen.ts`: poll every 5s **only when** `respectFullscreen === true`.
+- [x] Pick the lighter dependency between `node-active-window` and `win-fullscreen`; document choice. *(Neither — chose zero-dep PowerShell + Win32 P/Invoke. Rationale in `fullscreen.ts` header.)*
+- [x] On fire, if a fullscreen foreground process is detected and `respectFullscreen` is on, skip that fire without requeueing. *(Gated in scheduler `onFire` callback; scheduler still reschedules its next tick normally.)*
+- [x] Hook `powerMonitor.resume` to scheduler reschedule (already wired in M3; verify end-to-end).
+- [x] Hook `powerMonitor.suspend` as a no-op for now (documented).
+- [x] `Reset to defaults` overwrites `data.json` with defaults and reloads main state + open Settings tab. *(Store `onChange` re-applies autostart + fullscreen sync; ipc handler additionally calls `scheduler.rescheduleFromNow()`. Settings window already open when reset is invoked from About tab.)*
 
 ## M7 — Polish & Theming
 Final visual pass, motion unification, edge cases, icons.

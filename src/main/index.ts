@@ -1,6 +1,8 @@
 import { app, BrowserWindow, powerMonitor } from "electron";
 import { join } from "node:path";
 import { IpcChannels } from "../shared/ipc";
+import { applyAutostart } from "./autostart";
+import { FullscreenDetector } from "./fullscreen";
 import { registerIpc } from "./ipc";
 import { NotificationController } from "./notification-window";
 import { Scheduler } from "./scheduler";
@@ -15,6 +17,7 @@ let scheduler: Scheduler | null = null;
 let tray: TrayController | null = null;
 let notifications: NotificationController | null = null;
 let settings: SettingsWindowController | null = null;
+let fullscreen: FullscreenDetector | null = null;
 let disposeIpc: (() => void) | null = null;
 let disposeStatusBroadcast: (() => void) | null = null;
 
@@ -37,11 +40,31 @@ if (!gotLock) {
   });
 
   app.whenReady().then(async () => {
-    store = await Store.load();
+    fullscreen = new FullscreenDetector();
+    store = await Store.load({
+      hooks: {
+        onChange: (data) => {
+          applyAutostart(data.settings);
+          fullscreen?.sync(data.settings.respectFullscreen);
+        },
+      },
+    });
     const dataFilePath = join(app.getPath("userData"), "data.json");
 
+    applyAutostart(store.getSettings());
+    fullscreen.sync(store.getSettings().respectFullscreen);
+
     notifications = new NotificationController({ store });
-    scheduler = new Scheduler(store, (dhikr) => {
+    scheduler = new Scheduler(store, (dhikr, reason) => {
+      // Respect fullscreen apps: skip scheduled fires when a fullscreen
+      // foreground app is detected. Manual fires (tray "Show now") always show.
+      if (
+        reason === "scheduled" &&
+        store?.getSettings().respectFullscreen &&
+        fullscreen?.isForegroundFullscreen()
+      ) {
+        return;
+      }
       notifications?.present(dhikr);
     });
     settings = new SettingsWindowController({ store });
@@ -60,6 +83,9 @@ if (!gotLock) {
     scheduler.start();
 
     powerMonitor.on("resume", () => scheduler?.rescheduleFromNow());
+    // suspend: intentionally a no-op. The OS pauses our timers; on resume
+    // we reschedule from now, which keeps the cadence sane without bookkeeping.
+    powerMonitor.on("suspend", () => {});
 
     if (!startHidden) {
       settings.open();
@@ -81,6 +107,8 @@ if (!gotLock) {
     tray = null;
     notifications?.dispose();
     notifications = null;
+    fullscreen?.dispose();
+    fullscreen = null;
     settings?.close();
     settings = null;
     disposeIpc?.();
