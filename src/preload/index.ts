@@ -70,6 +70,10 @@ const api = {
     exportRaw: (): Promise<AppData> => invoke(IpcChannels.DataExportRaw),
     resetDefaults: (): Promise<AppData> => invoke(IpcChannels.DataResetDefaults),
     openFolder: (): Promise<void> => invoke(IpcChannels.DataOpenFolder),
+    importDialog: (mode: "merge" | "replace"): Promise<AdhkarImportResult | null> =>
+      invoke(IpcChannels.DataImportDialog, { mode }),
+    exportDialog: (format: "json" | "txt"): Promise<{ path: string } | null> =>
+      invoke(IpcChannels.DataExportDialog, { format }),
   },
 } as const;
 

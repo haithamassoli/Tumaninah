@@ -29,6 +29,8 @@ export const IpcChannels = {
   DataExportRaw: "data:export",
   DataResetDefaults: "data:reset",
   DataOpenFolder: "data:openFolder",
+  DataImportDialog: "data:importDialog",
+  DataExportDialog: "data:exportDialog",
 } as const;
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels];
@@ -100,6 +102,14 @@ export interface IpcContract {
   [IpcChannels.DataExportRaw]: { request: void; response: AppData };
   [IpcChannels.DataResetDefaults]: { request: void; response: AppData };
   [IpcChannels.DataOpenFolder]: { request: void; response: void };
+  [IpcChannels.DataImportDialog]: {
+    request: { mode: "merge" | "replace" };
+    response: AdhkarImportResult | null;
+  };
+  [IpcChannels.DataExportDialog]: {
+    request: { format: "json" | "txt" };
+    response: { path: string } | null;
+  };
 }
 
 export const DHIKR_MAX_LENGTH = 280;

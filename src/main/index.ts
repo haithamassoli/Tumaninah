@@ -4,58 +4,19 @@ import { IpcChannels } from "../shared/ipc";
 import { registerIpc } from "./ipc";
 import { NotificationController } from "./notification-window";
 import { Scheduler } from "./scheduler";
+import { SettingsWindowController } from "./settings-window";
 import { Store } from "./store";
 import { TrayController } from "./tray";
 
-const isDev = !app.isPackaged;
 const startHidden = process.argv.includes("--hidden");
 
-let settingsWindow: BrowserWindow | null = null;
 let store: Store | null = null;
 let scheduler: Scheduler | null = null;
 let tray: TrayController | null = null;
 let notifications: NotificationController | null = null;
+let settings: SettingsWindowController | null = null;
 let disposeIpc: (() => void) | null = null;
 let disposeStatusBroadcast: (() => void) | null = null;
-
-function createSettingsWindow(): BrowserWindow {
-  if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.show();
-    settingsWindow.focus();
-    return settingsWindow;
-  }
-
-  const win = new BrowserWindow({
-    width: 880,
-    height: 600,
-    minWidth: 720,
-    minHeight: 520,
-    show: false,
-    backgroundColor: "#FAFAF7",
-    title: "Tumaninah",
-    webPreferences: {
-      preload: join(__dirname, "../preload/index.js"),
-      contextIsolation: true,
-      sandbox: true,
-      nodeIntegration: false,
-    },
-  });
-
-  win.once("ready-to-show", () => win.show());
-  win.on("closed", () => {
-    settingsWindow = null;
-  });
-
-  const devUrl = process.env["ELECTRON_RENDERER_URL"];
-  if (isDev && devUrl) {
-    void win.loadURL(`${devUrl}/settings/index.html`);
-  } else {
-    void win.loadFile(join(__dirname, "../renderer/settings/index.html"));
-  }
-
-  settingsWindow = win;
-  return win;
-}
 
 function broadcastStatus(): void {
   if (!scheduler) return;
@@ -72,7 +33,7 @@ if (!gotLock) {
   app.quit();
 } else {
   app.on("second-instance", () => {
-    createSettingsWindow();
+    settings?.open();
   });
 
   app.whenReady().then(async () => {
@@ -83,6 +44,7 @@ if (!gotLock) {
     scheduler = new Scheduler(store, (dhikr) => {
       notifications?.present(dhikr);
     });
+    settings = new SettingsWindowController({ store });
 
     disposeIpc = registerIpc({ store, scheduler, dataFilePath });
     disposeStatusBroadcast = scheduler.onStatusChange(() => broadcastStatus());
@@ -90,7 +52,7 @@ if (!gotLock) {
     tray = new TrayController({
       scheduler,
       store,
-      openSettings: () => createSettingsWindow(),
+      openSettings: () => settings?.toggle(),
       quit: () => app.quit(),
     });
     tray.start();
@@ -100,7 +62,7 @@ if (!gotLock) {
     powerMonitor.on("resume", () => scheduler?.rescheduleFromNow());
 
     if (!startHidden) {
-      createSettingsWindow();
+      settings.open();
     }
   });
 
@@ -119,6 +81,8 @@ if (!gotLock) {
     tray = null;
     notifications?.dispose();
     notifications = null;
+    settings?.close();
+    settings = null;
     disposeIpc?.();
     disposeIpc = null;
     try {

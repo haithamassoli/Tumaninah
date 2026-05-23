@@ -1,4 +1,5 @@
-import { BrowserWindow, ipcMain, shell } from "electron";
+import { BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { IpcChannels } from "../shared/ipc";
 import type {
@@ -153,6 +154,53 @@ export function registerIpc(deps: IpcDeps): () => void {
         await shell.openPath(dirname(dataFilePath));
       },
     ],
+
+    [
+      IpcChannels.DataImportDialog,
+      async (event, payload): Promise<AdhkarImportResult | null> => {
+        assertObject(payload, "data:importDialog");
+        const mode: "merge" | "replace" =
+          (payload as { mode?: unknown }).mode === "replace" ? "replace" : "merge";
+        const parent = BrowserWindow.fromWebContents(
+          (event as Electron.IpcMainInvokeEvent).sender,
+        );
+        const result = await (parent
+          ? dialog.showOpenDialog(parent, openOpts())
+          : dialog.showOpenDialog(openOpts()));
+        if (result.canceled || result.filePaths.length === 0) return null;
+        const filePath = result.filePaths[0]!;
+        const raw = await readFile(filePath, "utf8");
+        const texts = filePath.toLowerCase().endsWith(".json")
+          ? parseJsonAdhkar(raw)
+          : parseTxtAdhkar(raw);
+        const importResult = store.importAdhkar(texts, mode);
+        broadcast(IpcChannels.AdhkarChanged, store.getAdhkar());
+        return importResult;
+      },
+    ],
+    [
+      IpcChannels.DataExportDialog,
+      async (event, payload): Promise<{ path: string } | null> => {
+        assertObject(payload, "data:exportDialog");
+        const format: "json" | "txt" =
+          (payload as { format?: unknown }).format === "txt" ? "txt" : "json";
+        const parent = BrowserWindow.fromWebContents(
+          (event as Electron.IpcMainInvokeEvent).sender,
+        );
+        const opts = saveOpts(format);
+        const result = await (parent
+          ? dialog.showSaveDialog(parent, opts)
+          : dialog.showSaveDialog(opts));
+        if (result.canceled || !result.filePath) return null;
+        const texts = store.getAdhkar().map((d) => d.text);
+        const payloadOut =
+          format === "json"
+            ? `${JSON.stringify({ adhkar: texts }, null, 2)}\n`
+            : `${texts.join("\n")}\n`;
+        await writeFile(result.filePath, payloadOut, "utf8");
+        return { path: result.filePath };
+      },
+    ],
   ];
 
   for (const [channel, handler] of handlers) {
@@ -181,4 +229,50 @@ function readText(payload: unknown, name: string): string {
   const text = (payload as { text?: unknown }).text;
   if (typeof text !== "string") throw new Error(`Invalid text for ${name}`);
   return text;
+}
+
+function openOpts(): Electron.OpenDialogOptions {
+  return {
+    title: "Import adhkar",
+    properties: ["openFile"],
+    filters: [
+      { name: "Adhkar", extensions: ["json", "txt"] },
+      { name: "All files", extensions: ["*"] },
+    ],
+  };
+}
+
+function saveOpts(format: "json" | "txt"): Electron.SaveDialogOptions {
+  return {
+    title: "Export adhkar",
+    defaultPath: format === "json" ? "adhkar.json" : "adhkar.txt",
+    filters:
+      format === "json"
+        ? [{ name: "JSON", extensions: ["json"] }]
+        : [{ name: "Text", extensions: ["txt"] }],
+  };
+}
+
+function parseJsonAdhkar(raw: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((v): v is string => typeof v === "string");
+    }
+    if (parsed && typeof parsed === "object" && Array.isArray((parsed as { adhkar?: unknown }).adhkar)) {
+      return ((parsed as { adhkar: unknown[] }).adhkar).filter(
+        (v): v is string => typeof v === "string",
+      );
+    }
+  } catch {
+    // fall through
+  }
+  throw new Error('Invalid JSON. Expected { "adhkar": ["..."] } or a string array.');
+}
+
+function parseTxtAdhkar(raw: string): string[] {
+  return raw
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
 }

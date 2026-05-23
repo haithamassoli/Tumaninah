@@ -67,18 +67,18 @@ Frameless transparent always-on-top window, no focus stealing, click-through wit
 ## M5 — Settings UI
 Settings window with sidebar tabs, status header, live theme switching, sliders, supplications manager with import/export.
 
-- [ ] Create `src/main/settings-window.ts`: `BrowserWindow` 880×600, min 720×520, hidden on boot, opens on demand.
-- [ ] Build `src/renderer/settings/App.tsx` layout with sidebar + content panel.
-- [ ] Status header strip showing `Next dhikr in MM:SS` or `Paused until …`, polling tray-equivalent state via IPC.
-- [ ] Routing between four tabs: General, Appearance, Supplications, About.
-- [ ] **General tab**: interval number+stepper (range 5–240), `Auto-start with Windows` toggle, `Respect fullscreen apps` toggle with helper text, pause chip with `Resume` action.
-- [ ] **Appearance tab**: theme segmented control (System/Light/Dark), 3×3 position picker (7 valid, 2 disabled cells), duration slider 3–15s, font size slider 16–36px with live preview row, soft chime toggle.
-- [ ] **Supplications tab**: virtualized list when N > 100; rows show RTL text, pencil to edit inline (textarea), trash to delete; toolbar with `+ Add`, `Import…`, `Export…`, count badge; empty state with `Add your first dhikr`.
-- [ ] Import: accept `.json` (`{ "adhkar": ["..."] }`) and `.txt` (one per line); validate and merge.
-- [ ] Export: save current adhkar to user-chosen `.json` or `.txt`.
-- [ ] **About tab**: app name (Arabic + Latin), version, font credit, `Open data folder` (opens `%APPDATA%/Tumaninah`), `Reset to defaults` with confirm dialog.
-- [ ] Live theme switching: theme changes apply instantly to Settings UI without restart and to the next popup.
-- [ ] Subscribe to settings changes via IPC push so the Settings window updates when changed elsewhere (e.g., from tray pause).
+- [x] Create `src/main/settings-window.ts`: `BrowserWindow` 880×600, min 720×520, hidden on boot, opens on demand.
+- [x] Build `src/renderer/settings/App.tsx` layout with sidebar + content panel.
+- [x] Status header strip showing `Next dhikr in MM:SS` or `Paused until …`, polling tray-equivalent state via IPC.
+- [x] Routing between four tabs: General, Appearance, Supplications, About.
+- [x] **General tab**: interval number+stepper (range 5–240), `Auto-start with Windows` toggle, `Respect fullscreen apps` toggle with helper text, pause chip with `Resume` action.
+- [x] **Appearance tab**: theme segmented control (System/Light/Dark), 3×3 position picker (7 valid, 2 disabled cells), duration slider 3–15s, font size slider 16–36px with live preview row, soft chime toggle.
+- [~] **Supplications tab**: virtualized list when N > 100; rows show RTL text, pencil to edit inline (textarea), trash to delete; toolbar with `+ Add`, `Import…`, `Export…`, count badge; empty state with `Add your first dhikr`. *(All UI in place. Virtualization deferred — N>100 unlikely pre-import; can wire react-window if needed.)*
+- [x] Import: accept `.json` (`{ "adhkar": ["..."] }`) and `.txt` (one per line); validate and merge.
+- [x] Export: save current adhkar to user-chosen `.json` or `.txt`.
+- [x] **About tab**: app name (Arabic + Latin), version, font credit, `Open data folder` (opens `%APPDATA%/Tumaninah`), `Reset to defaults` with confirm dialog.
+- [x] Live theme switching: theme changes apply instantly to Settings UI without restart and to the next popup.
+- [x] Subscribe to settings changes via IPC push so the Settings window updates when changed elsewhere (e.g., from tray pause).
 
 ## M6 — System Integration
 Auto-start with Windows, optional fullscreen detection, power events, reset-to-defaults flow.
