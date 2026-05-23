@@ -1,10 +1,14 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow } from "electron";
 import { join } from "node:path";
+import { registerIpc } from "./ipc";
+import { Store } from "./store";
 
 const isDev = !app.isPackaged;
 const startHidden = process.argv.includes("--hidden");
 
 let settingsWindow: BrowserWindow | null = null;
+let store: Store | null = null;
+let disposeIpc: (() => void) | null = null;
 
 function createSettingsWindow(): BrowserWindow {
   if (settingsWindow && !settingsWindow.isDestroyed()) {
@@ -53,8 +57,10 @@ if (!gotLock) {
     createSettingsWindow();
   });
 
-  app.whenReady().then(() => {
-    ipcMain.handle("app:ping", () => "pong" as const);
+  app.whenReady().then(async () => {
+    store = await Store.load();
+    const dataFilePath = join(app.getPath("userData"), "data.json");
+    disposeIpc = registerIpc({ store, dataFilePath });
 
     if (!startHidden) {
       createSettingsWindow();
@@ -63,5 +69,18 @@ if (!gotLock) {
 
   app.on("window-all-closed", () => {
     // Tray keeps the app alive; do not quit when all windows close.
+  });
+
+  app.on("before-quit", async (event) => {
+    if (!store) return;
+    event.preventDefault();
+    disposeIpc?.();
+    disposeIpc = null;
+    try {
+      await store.flush();
+    } finally {
+      store = null;
+      app.exit(0);
+    }
   });
 }

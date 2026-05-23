@@ -18,16 +18,16 @@ Electron + TypeScript + Vite + React scaffold, RTL setup, Tailwind with theme to
 ## M2 — Core Infrastructure
 Typed IPC layer, JSON store at `%APPDATA%/Tumaninah/data.json` with atomic writes, settings + adhkar data model, defaults seeded on first run.
 
-- [ ] Define shared types in `src/shared/types.ts`: `Settings`, `Dhikr`, `AppData`, `PopupPosition`, `Theme`.
-- [ ] Define IPC channel contract in `src/shared/ipc.ts` (channel names + request/response types).
-- [ ] Create `src/shared/defaults.ts` with `DEFAULT_SETTINGS` and `SEED_ADHKAR` (~40 curated entries).
-- [ ] Implement `src/main/store.ts`: `load()`, `save()`, atomic write via tmp + rename, debounced 250ms.
-- [ ] Implement migration: read `version` field; if missing, write `version: 1`.
-- [ ] On first run, write `data.json` with defaults if it does not exist.
-- [ ] Implement `src/main/ipc.ts` registering all channels (`settings:get/set`, `adhkar:list/add/update/delete/import/export`, `scheduler:status/pause/resume/fireNow`, `notification:dismiss`).
-- [ ] Expose the typed API via preload `contextBridge`.
-- [ ] Add input validation in main handlers: trim, dedupe, max 280 chars per dhikr, reject empty.
-- [ ] Unit-test the store: round-trip, atomic write does not corrupt on crash mid-write.
+- [x] Define shared types in `src/shared/types.ts`: `Settings`, `Dhikr`, `AppData`, `PopupPosition`, `Theme`.
+- [x] Define IPC channel contract in `src/shared/ipc.ts` (channel names + request/response types).
+- [x] Create `src/shared/defaults.ts` with `DEFAULT_SETTINGS` and `SEED_ADHKAR` (~40 curated entries).
+- [x] Implement `src/main/store.ts`: `load()`, `save()`, atomic write via tmp + rename, debounced 250ms.
+- [x] Implement migration: read `version` field; if missing, write `version: 1`.
+- [x] On first run, write `data.json` with defaults if it does not exist.
+- [x] Implement `src/main/ipc.ts` registering all channels (`settings:get/set`, `adhkar:list/add/update/delete/import/export`, `scheduler:status/pause/resume/fireNow`, `notification:dismiss`).
+- [x] Expose the typed API via preload `contextBridge`.
+- [x] Add input validation in main handlers: trim, dedupe, max 280 chars per dhikr, reject empty.
+- [x] Unit-test the store: round-trip, atomic write does not corrupt on crash mid-write.
 
 ## M3 — Scheduler & System Tray
 Fixed-interval scheduler, random selection without immediate repeat, pause states, tray with dynamic tooltip and full context menu.
