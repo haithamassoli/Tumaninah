@@ -1,14 +1,20 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, powerMonitor } from "electron";
 import { join } from "node:path";
+import { IpcChannels } from "../shared/ipc";
 import { registerIpc } from "./ipc";
+import { Scheduler } from "./scheduler";
 import { Store } from "./store";
+import { TrayController } from "./tray";
 
 const isDev = !app.isPackaged;
 const startHidden = process.argv.includes("--hidden");
 
 let settingsWindow: BrowserWindow | null = null;
 let store: Store | null = null;
+let scheduler: Scheduler | null = null;
+let tray: TrayController | null = null;
 let disposeIpc: (() => void) | null = null;
+let disposeStatusBroadcast: (() => void) | null = null;
 
 function createSettingsWindow(): BrowserWindow {
   if (settingsWindow && !settingsWindow.isDestroyed()) {
@@ -49,6 +55,16 @@ function createSettingsWindow(): BrowserWindow {
   return win;
 }
 
+function broadcastStatus(): void {
+  if (!scheduler) return;
+  const status = scheduler.getStatus();
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) {
+      win.webContents.send(IpcChannels.SchedulerStatusChanged, status);
+    }
+  }
+}
+
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -60,7 +76,27 @@ if (!gotLock) {
   app.whenReady().then(async () => {
     store = await Store.load();
     const dataFilePath = join(app.getPath("userData"), "data.json");
-    disposeIpc = registerIpc({ store, dataFilePath });
+
+    // M4 owns the notification window. Until it lands, surface fires via log
+    // so M3 timing/selection is observable end-to-end.
+    scheduler = new Scheduler(store, (dhikr, reason) => {
+      console.log(`[scheduler:${reason}] ${dhikr.text}`);
+    });
+
+    disposeIpc = registerIpc({ store, scheduler, dataFilePath });
+    disposeStatusBroadcast = scheduler.onStatusChange(() => broadcastStatus());
+
+    tray = new TrayController({
+      scheduler,
+      store,
+      openSettings: () => createSettingsWindow(),
+      quit: () => app.quit(),
+    });
+    tray.start();
+
+    scheduler.start();
+
+    powerMonitor.on("resume", () => scheduler?.rescheduleFromNow());
 
     if (!startHidden) {
       createSettingsWindow();
@@ -74,6 +110,12 @@ if (!gotLock) {
   app.on("before-quit", async (event) => {
     if (!store) return;
     event.preventDefault();
+    disposeStatusBroadcast?.();
+    disposeStatusBroadcast = null;
+    scheduler?.stop();
+    scheduler = null;
+    tray?.stop();
+    tray = null;
     disposeIpc?.();
     disposeIpc = null;
     try {

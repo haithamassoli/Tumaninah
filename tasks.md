@@ -32,18 +32,18 @@ Typed IPC layer, JSON store at `%APPDATA%/Tumaninah/data.json` with atomic write
 ## M3 — Scheduler & System Tray
 Fixed-interval scheduler, random selection without immediate repeat, pause states, tray with dynamic tooltip and full context menu.
 
-- [ ] Implement `src/main/scheduler.ts` with a single `setTimeout` chain and `nextFireAt` state.
-- [ ] Random dhikr selection that avoids the immediately previous one when `adhkar.length > 1`.
-- [ ] `pause(durationMs | until)` and `resume()` writing `pausedUntil` to settings.
-- [ ] `fireNow()` shows the popup without resetting `nextFireAt`.
-- [ ] Reschedule on any settings change that affects timing.
-- [ ] Skip a fire when `pausedUntil` is in the future and reschedule the next one normally.
-- [ ] Create `src/main/tray.ts` with custom monochrome icon (Win11 theme-aware).
-- [ ] Tray tooltip updates every second: `Tumaninah — Next dhikr in MM:SS` or `Paused until HH:MM`.
-- [ ] Tray context menu: `Open Settings`, `Show next dhikr now`, `Pause` submenu (`30 minutes`, `1 hour`, `Until tomorrow 6:00 AM`, `Resume`), separator, `Quit`.
-- [ ] `Resume` item visible only while paused.
-- [ ] Tray left-click toggles the Settings window.
-- [ ] Wire `powerMonitor.resume` → reschedule next fire to `now + intervalMinutes`.
+- [x] Implement `src/main/scheduler.ts` with a single `setTimeout` chain and `nextFireAt` state.
+- [x] Random dhikr selection that avoids the immediately previous one when `adhkar.length > 1`.
+- [x] `pause(durationMs | until)` and `resume()` writing `pausedUntil` to settings.
+- [x] `fireNow()` shows the popup without resetting `nextFireAt`. *(Invokes `onFire` callback; actual popup wired in M4.)*
+- [x] Reschedule on any settings change that affects timing.
+- [x] Skip a fire when `pausedUntil` is in the future and reschedule the next one normally.
+- [~] Create `src/main/tray.ts` with custom monochrome icon (Win11 theme-aware). *(Placeholder programmatic dot icon; real Win11 theme-aware PNGs land in M7.)*
+- [x] Tray tooltip updates every second: `Tumaninah — Next dhikr in MM:SS` or `Paused until HH:MM`.
+- [x] Tray context menu: `Open Settings`, `Show next dhikr now`, `Pause` submenu (`30 minutes`, `1 hour`, `Until tomorrow 6:00 AM`, `Resume`), separator, `Quit`.
+- [x] `Resume` item visible only while paused.
+- [~] Tray left-click toggles the Settings window. *(Left-click opens Settings; toggle-to-close lands with M5 Settings window lifecycle.)*
+- [x] Wire `powerMonitor.resume` → reschedule next fire to `now + intervalMinutes`.
 
 ## M4 — Notification Popup (Critical)
 Frameless transparent always-on-top window, no focus stealing, click-through with hover-to-interact dismiss, fade animation, 7-anchor positioning, replacement on collision.

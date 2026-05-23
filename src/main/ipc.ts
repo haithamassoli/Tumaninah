@@ -15,6 +15,7 @@ export interface SchedulerLike {
   pauseUntil(iso: string): SchedulerStatus;
   resume(): SchedulerStatus;
   fireNow(): SchedulerStatus;
+  rescheduleFromNow(): void;
 }
 
 export interface IpcDeps {
@@ -40,8 +41,13 @@ export function registerIpc(deps: IpcDeps): () => void {
       IpcChannels.SettingsSet,
       (_e, patch) => {
         assertObject(patch, "settings patch");
+        const prev = store.getSettings();
         const next = store.setSettings(patch as Partial<Settings>);
         broadcast(IpcChannels.SettingsChanged, next);
+        if (scheduler && next.intervalMinutes !== prev.intervalMinutes) {
+          // Interval changed: requeue next fire from now.
+          scheduler.rescheduleFromNow();
+        }
         return next;
       },
     ],
